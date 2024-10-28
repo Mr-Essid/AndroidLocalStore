@@ -1,13 +1,22 @@
 package edu.google.compose.databasepracticeroom
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.ImageView
+import android.widget.ScrollView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toFile
+import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.FragmentContainer
@@ -19,6 +28,10 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
+import java.io.OutputStream
 
 class SignupActivity : AppCompatActivity() {
     lateinit var submitButton: Button
@@ -26,13 +39,17 @@ class SignupActivity : AppCompatActivity() {
     lateinit var signInButton: Button
     private val TAG = "SignupActivity"
     val viewModel: SignUpViewModel by viewModels()
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_signup)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            v.setPadding(ime.left, ime.top, ime.right, ime.bottom)
             insets
         }
 
@@ -42,7 +59,6 @@ class SignupActivity : AppCompatActivity() {
 
         supportFragmentManager.beginTransaction()
             .add(R.id.signup_fragment, SignupFirstStep())
-            .addToBackStack(null)
             .commit()
 
 
@@ -54,7 +70,6 @@ class SignupActivity : AppCompatActivity() {
                 if(viewModel.validateFirstPage()) {
                     supportFragmentManager.beginTransaction()
                         .replace(R.id.signup_fragment, SignupSecondStep())
-                        .addToBackStack(null)
                         .commit()
                 }
             }
@@ -72,13 +87,36 @@ class SignupActivity : AppCompatActivity() {
                                 message.append(" $it")
                             }
                             Toast.makeText(this@SignupActivity, message.toString(), Toast.LENGTH_SHORT).show()
-                        }else {
-                            val intent = Intent(this@SignupActivity, MainActivity::class.java)
-                            intent.putExtra("status", 1 )
-                            setResult(127, intent)
-                            finish()
+                        }else if(supportFragmentManager.findFragmentById(R.id.signup_fragment) is SignupSecondStep) {
+                            supportFragmentManager.beginTransaction().replace(R.id.signup_fragment, ProfilePhotoFragment()).commit()
                         }
                     }
+                }
+            }
+            if(supportFragmentManager.findFragmentById(R.id.signup_fragment) is ProfilePhotoFragment) {
+                val internalAppFS = this.filesDir
+                val directory = File(internalAppFS, viewModel.username)
+                if(!directory.exists()) {
+                    directory.mkdir()
+                    Log.d(TAG, "ProfileDirectory: isCreated")
+                }else {
+                    Log.d(TAG, "ProfileDirectory: Exists")
+                }
+
+                val newFile = File(directory, "profile_pic.png")
+                newFile.outputStream().use { out ->
+                    viewModel.uri?.let {
+                       contentResolver.openInputStream(it).use {
+                          newFile.outputStream().use { output ->
+                              output.write(it?.readBytes())
+                              output.flush()
+                          }
+                       }
+                    }
+                }
+                viewModel.uri = newFile.toUri()
+                lifecycleScope.launch {
+
                 }
             }
         }

@@ -1,6 +1,7 @@
 package edu.google.compose.databasepracticeroom
 
 import android.app.Application
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.room.Room
@@ -36,7 +37,7 @@ class SignUpViewModel(application: Application) : AndroidViewModel(application) 
     var phoneNumber = ""
     var email = ""
     var passwordConfirmation = ""
-
+    var uri: Uri? = null
 
 
     // hard coded database is not best following the best practice
@@ -85,7 +86,7 @@ class SignUpViewModel(application: Application) : AndroidViewModel(application) 
             mapError["status"] = "0"
             emit(mapError)
         }else {
-            db.adminDao().insertAdmin(Admin(UUID.randomUUID(), email = email, username = username, password = password, lastname = lastname, imageFilePath = "", name = firstName, phoneNumber = phoneNumber))
+            db.adminDao().insertAdmin(Admin(UUID.randomUUID(), email = email, username = username, password = password, lastname = lastname, imageFilePath = uri.toString(), name = firstName, phoneNumber = phoneNumber))
             mapError["status"] = "1"
             emit(mapError)
         }

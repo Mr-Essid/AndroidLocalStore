@@ -67,6 +67,9 @@ class MainActivity : AppCompatActivity() {
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+            Log.d(TAG, "onCreate: we have got inserts of keyboard (left: ${ime.left}, right: ${ime.right}, top: ${ime.top}, bottom: ${ime.bottom}")
+            v.setPadding(ime.left, ime.top, ime.right, ime.bottom)
             insets
         }
 
