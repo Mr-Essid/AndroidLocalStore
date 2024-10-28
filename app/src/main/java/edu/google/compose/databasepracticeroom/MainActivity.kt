@@ -6,6 +6,7 @@ import android.util.Log
 import android.widget.Button
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -38,6 +39,12 @@ class MainActivity : AppCompatActivity() {
     // username
     private lateinit var editTextInputLayout: TextInputLayout
     private lateinit var editText: TextInputEditText
+
+    private val activityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        if(it.resultCode == 127 && it.data?.getIntExtra("status", 0) == 1) {
+            Toast.makeText(this, "your account has been registered with success status", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     // password
     private lateinit var passwordEditText: TextInputEditText
@@ -102,20 +109,11 @@ class MainActivity : AppCompatActivity() {
 
         signUpButton.setOnClickListener {
             val intent = Intent(this, SignupActivity::class.java)
-            startActivity(intent)
+            activityLauncher.launch(intent)
         }
 
     }
 
 
-    @Deprecated("This method has been deprecated in favor of using the Activity Result API\n      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt\n      contracts for common intents available in\n      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for\n      testing, and allow receiving results in separate, testable classes independent from your\n      activity. Use\n      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}\n      with the appropriate {@link ActivityResultContract} and handling the result in the\n      {@link ActivityResultCallback#onActivityResult(Object) callback}.")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if(resultCode == 127) {
-           data?.getStringExtra("status")?.let {
-               Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
-           }
-        }
-    }
 
 }

@@ -74,7 +74,7 @@ class SignupActivity : AppCompatActivity() {
                             Toast.makeText(this@SignupActivity, message.toString(), Toast.LENGTH_SHORT).show()
                         }else {
                             val intent = Intent(this@SignupActivity, MainActivity::class.java)
-                            intent.putExtra("status", "added new user")
+                            intent.putExtra("status", 1 )
                             setResult(127, intent)
                             finish()
                         }
