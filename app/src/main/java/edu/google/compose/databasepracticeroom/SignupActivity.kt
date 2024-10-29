@@ -75,23 +75,20 @@ class SignupActivity : AppCompatActivity() {
             }
 
             if(supportFragmentManager.findFragmentById(R.id.signup_fragment) is SignupSecondStep) {
-                lifecycle.coroutineScope.launch {
-                    viewModel.validateSecondPage().collectLatest { ourMap ->
-                        if (ourMap["status"] == "0") {
-                            val message = StringBuilder("incorrect: ")
-                            Log.d(TAG, "onCreate: Problem With In Your Input Data")
-                            ourMap["username"]?.let {
-                                message.append(" $it")
-                            }
-                            ourMap["email"]?.let {
-                                message.append(" $it")
-                            }
-                            Toast.makeText(this@SignupActivity, message.toString(), Toast.LENGTH_SHORT).show()
-                        }else if(supportFragmentManager.findFragmentById(R.id.signup_fragment) is SignupSecondStep) {
-                            supportFragmentManager.beginTransaction().replace(R.id.signup_fragment, ProfilePhotoFragment()).commit()
-                        }
-                    }
-                }
+
+              lifecycleScope.launch {
+                  viewModel.validateSecondPage().collectLatest {
+                      if (it["status"] == "1") {
+                          supportFragmentManager.beginTransaction().replace(R.id.signup_fragment, ProfilePhotoFragment()).commit()
+                      }else {
+                         val stringBuilder = StringBuilder()
+                         it.forEach { (key, value) ->
+                            stringBuilder.append("$key: $value\n")
+                         }
+                          Toast.makeText(this@SignupActivity, stringBuilder.toString(), Toast.LENGTH_SHORT).show()
+                      }
+                  }
+              }
             }
             if(supportFragmentManager.findFragmentById(R.id.signup_fragment) is ProfilePhotoFragment) {
                 val internalAppFS = this.filesDir
@@ -105,10 +102,11 @@ class SignupActivity : AppCompatActivity() {
 
                 val newFile = File(directory, "profile_pic.png")
                 newFile.outputStream().use { out ->
-                    viewModel.uri?.let {
-                       contentResolver.openInputStream(it).use {
+                    viewModel.uri?.let { uri ->
+                        contentResolver.openInputStream(uri).use {
+                          val bytes_ = it?.readBytes()
                           newFile.outputStream().use { output ->
-                              output.write(it?.readBytes())
+                              output.write(bytes_)
                               output.flush()
                           }
                        }
@@ -116,7 +114,12 @@ class SignupActivity : AppCompatActivity() {
                 }
                 viewModel.uri = newFile.toUri()
                 lifecycleScope.launch {
-
+                    viewModel.validateThirdPage().collectLatest {
+                        if (it["status"] == "1") {
+                            setResult(127, Intent().putExtra("status", 0))
+                            finish()
+                        }
+                    }
                 }
             }
         }

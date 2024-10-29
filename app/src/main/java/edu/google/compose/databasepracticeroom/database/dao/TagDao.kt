@@ -24,5 +24,4 @@ interface TagDao {
 
     @Query("SELECT * FROM tags WHERE tag_id = :id")
     suspend fun tagFindById(id: Int): Tag
-
 }

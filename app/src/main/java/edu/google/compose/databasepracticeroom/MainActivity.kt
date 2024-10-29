@@ -81,7 +81,8 @@ class MainActivity : AppCompatActivity() {
         signUpButton = findViewById(R.id.go_to_signup)
         submitButton = findViewById(R.id.submit_button)
         cancelButton = findViewById(R.id.cancel_button)
-        db = Room.databaseBuilder(applicationContext, MobileCommerceDB::class.java, "mainDB").build()
+        db = DatabaseInstance.getInstance(this)
+
 
         submitButton.setOnClickListener {
             editText.error = null
@@ -103,8 +104,13 @@ class MainActivity : AppCompatActivity() {
                         if(user.password != password) {
                             Log.d(TAG, "OnCreate: username exists but password incorrect")
                             editText.error = "username or password incorrect"
+                        }else {
+                            val intent = Intent(this@MainActivity, DashboardActivity::class.java)
+                            intent.putExtra("username", user.username)
+                            startActivity(intent)
+                            finish()
+                            Log.d(TAG, "OnCreate: username exists  password correct")
                         }
-                        Log.d(TAG, "OnCreate: username exists  password correct")
                     }
                 }
             }

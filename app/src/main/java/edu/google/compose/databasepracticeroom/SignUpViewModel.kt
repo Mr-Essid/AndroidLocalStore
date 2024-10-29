@@ -4,6 +4,7 @@ import android.app.Application
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
+import androidx.room.Database
 import androidx.room.Room
 import edu.google.compose.databasepracticeroom.database.Admin
 import edu.google.compose.databasepracticeroom.database.MobileCommerceDB
@@ -41,7 +42,7 @@ class SignUpViewModel(application: Application) : AndroidViewModel(application) 
 
 
     // hard coded database is not best following the best practice
-    private val db = Room.databaseBuilder(application, MobileCommerceDB::class.java, "mainDB").build()
+    private val db = DatabaseInstance.getInstance(application)
 
 
     fun validateFirstPage(): Boolean {
@@ -81,14 +82,34 @@ class SignUpViewModel(application: Application) : AndroidViewModel(application) 
                 mapError["email"] = "email already exits"
             }
         }
-
         if(mapError.isNotEmpty()) {
             mapError["status"] = "0"
             emit(mapError)
         }else {
-            db.adminDao().insertAdmin(Admin(UUID.randomUUID(), email = email, username = username, password = password, lastname = lastname, imageFilePath = uri.toString(), name = firstName, phoneNumber = phoneNumber))
             mapError["status"] = "1"
             emit(mapError)
+        }
+    }
+
+
+    suspend fun validateThirdPage() = flow<Map<String, String>>{
+        val uri = Uri.parse(uri.toString())
+        if (uri.toString().startsWith("file")) {
+            emit(mapOf("status" to "1"))
+            db.adminDao().insertAdmin(
+                Admin(
+                    username = username,
+                    name = firstName,
+                    lastname = lastname,
+                    phoneNumber = phoneNumber,
+                    imageFilePath = uri.toString(),
+                    email = email,
+                    password = password,
+                    id = UUID.randomUUID()
+                )
+            )
+        }else {
+            emit(mapOf("status" to "0", "uri" to "same thing went wrong please pick other image"))
         }
 
     }

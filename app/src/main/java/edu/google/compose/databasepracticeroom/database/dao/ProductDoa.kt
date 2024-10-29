@@ -34,6 +34,9 @@ interface ProductDoa {
     @Query("SELECT * FROM products")
     suspend fun productsWithTags(): List<TagProduct>
 
+    @Transaction
+    @Query("SELECT * FROM products WHERE admin_id = :userId")
+    suspend fun productsWithTagsOfUser(userId: UUID): List<TagProduct>
 }
 
 
